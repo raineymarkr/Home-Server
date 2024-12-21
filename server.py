@@ -1,4 +1,4 @@
-from flask import Flask, request, Response,jsonify
+from flask import Flask, request, Response,jsonify, send_from_directory, render_template_string
 import os
 import subprocess
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
@@ -18,24 +18,37 @@ jwt = JWTManager(app)
 
 load_dotenv()
 
-# In-memory token blacklist
 blacklist = set()
+
+USERS = {
+    ADMIN_USERNAME: ADMIN_PASSWORD
+}
 
 @jwt.token_in_blocklist_loader
 def check_if_token_in_blacklist(jwt_header, jwt_payload):
-    jti = jwt_payload["jti"]  # Get the unique identifier for the token
+    jti = jwt_payload["jti"]
     return jti in blacklist
 
 os.environ["PATH"] += os.pathsep + r"C:\Users\raine\AppData\Local\MEGAcmd"
 
 @app.route('/')
 def home():
-    return "Server is running!"
+    return send_from_directory(app.static_folder, 'index.html')
 
-# Hardcoded credentials (for demonstration purposes)
-USERS = {
-    ADMIN_USERNAME: ADMIN_PASSWORD
-}
+@app.route('/<path:path>')
+def serve_static_or_directory(path):
+    full_path = os.path.join(app.static_folder, path)
+    if os.path.isdir(full_path):
+        files = os.listdir(full_path)
+        return render_template_string(
+            "<h1> Directory Listing for {{ path }}</h1>"
+            "<ul>{% for file in files %}<li><a href='{{ path }}/{{ file }}'</a></li>{% endfor %}</ul>",
+            path=path, files=files
+        )
+    elif os.path.isfile(full_path):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return "File or directory not found", 404
 
 @app.route('/login', methods=['POST'])
 def login():
