@@ -6,6 +6,8 @@ from datetime import timedelta
 from dotenv import load_dotenv
 app = Flask(__name__)
 
+load_dotenv(dotenv_path=r'.env')
+
 SECRET_KEY = os.getenv("FLASK_SECRET_KEY")
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
@@ -16,7 +18,7 @@ app.config["JWT_BLACKLIST_ENABLED"] = True
 
 jwt = JWTManager(app)
 
-load_dotenv()
+
 
 blacklist = set()
 
@@ -54,6 +56,12 @@ def serve_static_or_directory(path):
 def login():
     username = request.json.get("username")
     password = request.json.get("password")
+
+    print("Received Username:", username)
+    print("Received Password:", password)
+    print("Expected Username:", ADMIN_USERNAME)
+    print("Expected Password:", ADMIN_PASSWORD)
+
     if USERS.get(username) == password:
         token = create_access_token(identity=username)
         return jsonify({"access_token": token}), 200
