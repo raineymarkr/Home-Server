@@ -91,7 +91,7 @@ def logout():
     return jsonify({"msg": "Successfully logged out"}), 200
 
 @app.route('/restart', methods=['POST'])
-@jwt_required
+@jwt_required()
 def restart_task():
     process_name = request.json.get('process')
     start_command = request.json.get('start_command')
