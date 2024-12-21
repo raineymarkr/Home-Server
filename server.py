@@ -42,7 +42,7 @@ def serve_static_or_directory(path):
         files = os.listdir(full_path)
         return render_template_string(
             "<h1> Directory Listing for {{ path }}</h1>"
-            "<ul>{% for file in files %}<li><a href='{{ path }}/{{ file }}'</a></li>{% endfor %}</ul>",
+            "<ul>{% for file in files %}<li><a href='{{ path }}/{{ file }}'></a></li>{% endfor %}</ul>",
             path=path, files=files
         )
     elif os.path.isfile(full_path):
