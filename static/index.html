@@ -33,7 +33,94 @@
         ul li {
             margin-bottom: 10px;
         }
+        .carousel-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+    .carousel-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 1;
+    }
+    .carousel-content {
+        position: relative;
+        background: #555555;
+        padding: 20px;
+        border-radius: 8px;
+        z-index: 2;
+        text-align: center;
+    }
+    .carousel-content img {
+        max-width: 90%;
+        max-height: 80vh;
+    }
+    .carousel-controls {
+        margin-top: 10px;
+    }
+    .carousel-button {
+        margin: 0 10px;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+    }
     </style>
+    <script>
+        let currentIndex = 0;
+        let currentProject = ""
+        let images = [];
+
+        function openCarousel(project) {
+            const galleries = {
+                "3-notch-nutrition": [
+                    "3nn-01.png",
+                    "3nn-02.png",
+                    "3nn-03.png"
+                ],
+                "92.5-the-crab": [
+                    "crab1.png"
+                ]
+            };
+            images = galleries[project];
+            currentIndex = 0;
+            currentProject = project;
+            const modal = document.getElementById("carouselModal");
+            modal.style.display = "flex";
+            renderCarousel(project);
+        }
+
+        function closeCarousel() {
+            const modal = document.getElementById("carouselModal");
+            modal.style.display = "none";
+        }
+
+        function renderCarousel(project) {
+            const imagePath = `/galleries/${project}/${images[currentIndex]}`;
+            console.log(imagePath);
+            document.getElementById("carouselImage").src = imagePath;
+            document.getElementById("carouselImage").alt = `Image ${currentIndex + 1}`;
+        }
+
+        function prevImage() {
+            currentIndex = (currentIndex - 1 + images.length) % images.length;
+            renderCarousel(currentProject);
+        }
+
+        function nextImage() {
+            currentIndex = (currentIndex + 1) % images.length;
+            renderCarousel(currentProject);
+        }
+    </script>
 </head>
 <body>
     <header>
@@ -118,18 +205,27 @@
         <h2>Projects</h2>
         <ul>
             <li><strong>Three Notch Nutrition, <i>Mobile, Alabama</i> (2021)</strong><br>
-                Designed several logos, menus, gift cards, and clothing items.
+                Designed several logos, menus, gift cards, and clothing items.<br>
+                <a href="#" onclick="openCarousel('3-notch-nutrition')">View Gallery</a>
             </li>
             <li><strong>92.5 The CRAB FM, <i>Mobile, Alabama</i> (2019)</strong><br>
-                Designed brand logo, a stylized cartoon crab with branding.
-            </li>
-            <li><strong>Colonial Homes Apartments, <i>Mobile, Alabama</i> (2015)</strong><br>
-                Designed brand logo.
+                Designed brand logo, a stylized cartoon crab with branding.<br>
+                <a href="#" onclick="openCarousel('92.5-the-crab')">View Gallery</a>
             </li>
             <li><strong>Carnegie Museum of Natural History, <i>Pittsburgh, PA</i> (2008)</strong><br>
                 Designed props as part of a virtual walkthrough of an Ancient Egyptian temple and marketplace.
             </li>
         </ul>
     </section>
+    <div id="carouselModal" class="carousel-modal" style="display: none;">
+        <div class="carousel-overlay" onclick="closeCarousel()"></div>
+        <div class="carousel-content">
+            <img id="carouselImage" src="" alt="Carousel Image">
+            <div class="carousel-controls">
+                <button class="carousel-button" onclick="prevImage(currentProject)">Previous</button>
+                <button class="carousel-button" onclick="nextImage(currentProject)">Next</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
