@@ -263,7 +263,7 @@ if(!loggedin){
         }
     }
 }
-if (loggedin) {
+if (loggedin != false) {
     document.getElementById('loginModal').style.display = 'none';
     tcgdex = new TCGdex('en'); 
     //saved = loadFile('http://markrainey.me/datastore/savedJson.txt');
@@ -312,4 +312,5 @@ if (loggedin) {
         });
     }
  }
+
 
