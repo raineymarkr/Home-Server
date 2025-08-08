@@ -150,11 +150,33 @@ async function login(username, password) {
             }
 
             const data = await response.json();
-            console.log('Login successful:', data);
+            localStorage.setItem('token', data.token);
             return true;
     } catch(error) {
         console.error('Error during login:', error);
         alert('Login failed. Please check your credentials.');
+    }
+}
+
+async function saveJson(token) {
+    try{
+        const json = countCards();
+        const response = await fetch('http://markrainey.me/datastore',{
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(json)
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Save failed: ${errorData.message}`);
+            }
+            return true;
+    } catch(error) {
+        console.error('Error during save:', error);
+        alert('Save failed. Please try again.');
     }
 }
 
@@ -186,9 +208,8 @@ function countCards(){
         }
         jsonlist[cardName] = checkbox.checked ? 1 : 0
     }
-    
-    console.log(jsonlist)
     console.log(`Ho-Oh Deck: ${acquired_hooh} cards, Lugia Deck: ${acquired_lugia} cards, Non-exclusive: ${acquired_nonexclusive} cards`)
+    return jsonlist
 }
 
 async function loadFile(filePath){
