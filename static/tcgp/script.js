@@ -151,7 +151,7 @@ async function login(username, password) {
 
             const data = await response.json();
             console.log('Login successful:', data);
-            return data;
+            return true;
     } catch(error) {
         console.error('Error during login:', error);
         alert('Login failed. Please check your credentials.');
@@ -312,5 +312,6 @@ if (loggedin != false) {
         });
     }
  }
+
 
 
