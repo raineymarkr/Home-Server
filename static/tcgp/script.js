@@ -208,6 +208,7 @@ async function saveJson() {
             }
             jsonlist[cardName] = checkbox.checked ? 1 : 0
         }
+        document.getElementById('log-output').textContent = `Ho-Oh Deck: ${acquired_hooh} cards, Lugia Deck: ${acquired_lugia} cards, Non-exclusive: ${acquired_nonexclusive} cards`
         console.log(`Ho-Oh Deck: ${acquired_hooh} cards, Lugia Deck: ${acquired_lugia} cards, Non-exclusive: ${acquired_nonexclusive} cards`)
         return jsonlist
     }
