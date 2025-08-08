@@ -159,42 +159,24 @@
     }
 
 async function saveJson() {
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) throw new Error('Not logged in');
+  const token = localStorage.getItem('token');
+  const payload = countCards();
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'text/plain' });
 
-    const payload = countCards();
+  const fd = new FormData();
+  fd.append('file', blob, 'savedJson.txt');
 
-    const fileBlob = new Blob(
-      [JSON.stringify(payload, null, 2)], 
-      { type: 'application/json' }
-    );
+  const resp = await fetch('http://markrainey.me/datastore', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + token },
+    body: fd
+  });
 
-    const formData = new FormData();
-    formData.append('file', fileBlob, 'savedJson.txt');
-
-    const resp = await fetch('http://markrainey.me/datastore', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + token
-      },
-      body: formData
-    });
-
-    if (!resp.ok) {
-      let msg = 'Unknown error';
-      try { msg = (await resp.json()).message; } catch {}
-      throw new Error(`Save failed: ${msg}`);
-    }
-
-    console.log('File saved successfully');
-    return true;
-
-  } catch (err) {
-    console.error('Error during save:', err);
-    alert('Save failed. Please try again.');
-  }
+  const text = await resp.text();
+  if (!resp.ok) throw new Error(text || 'Save failed');
+  console.log('Saved:', text);
 }
+
 
 
     function countCards(){
