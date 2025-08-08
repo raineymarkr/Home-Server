@@ -160,6 +160,7 @@
 
 async function saveJson() {
   const token = localStorage.getItem('token');
+  console.log('Token:', token);
   const payload = countCards();
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'text/plain' });
 
