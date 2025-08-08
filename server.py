@@ -1,9 +1,13 @@
-from flask import Flask, request, Response,jsonify, send_from_directory, render_template_string
+from flask import Flask, request, Response,jsonify, send_from_directory, render_template_string, flash, redirect, url_for
 import os
 import subprocess
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
 from datetime import timedelta   
 from dotenv import load_dotenv
+from concurrent.futures import ThreadPoolExecutor
+import logging 
+from werkzeug.utils import secure_filename
+
 app = Flask(__name__)
 
 load_dotenv(dotenv_path=r'.env')
@@ -18,7 +22,10 @@ app.config["JWT_BLACKLIST_ENABLED"] = True
 
 jwt = JWTManager(app)
 
+UPLOAD_FOLDER = r"E:\data"
+ALLOWED_EXTENSIONS = {'txt'}
 
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 blacklist = set()
 
@@ -32,6 +39,38 @@ def check_if_token_in_blacklist(jwt_header, jwt_payload):
     return jti in blacklist
 
 os.environ["PATH"] += os.pathsep + r"C:\Users\raine\AppData\Local\MEGAcmd"
+
+# Configure logging to write to a file
+logging.basicConfig(
+    filename="flask_app.log",  # Log file name
+    level=logging.DEBUG,  # Log all levels (INFO, DEBUG, ERROR)
+    format="%(asctime)s [%(levelname)s] - %(message)s")  # Log format
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/datastore', methods=['POST'])
+@jwt_required()
+def upload_file():
+    if 'file' not in request.files:
+        return jsonify({"status": "No selected file"}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"status": "No selected file"}), 400
+
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        return jsonify({"status": "uploaded", "filename": filename}), 200
+
+    return jsonify({"status": "File type not allowed"}), 400
+
+
+@app.route('/datastore/<name>')
+def download_file(name):
+    return send_from_directory(app.config["UPLOAD_FOLDER"], name)
 
 @app.route('/')
 def home():
@@ -67,29 +106,25 @@ def login():
         return jsonify({"access_token": token}), 200
     return jsonify({"error": "Invalid credentials"}), 401
 
+executor = ThreadPoolExecutor(max_workers=4)
+
 @app.route('/command', methods=['POST'])
 @jwt_required()
 def run_command():
+    logging.info(f"Received request: {request.json}")
+    print(request.json)
     command = request.json.get('command')
-    if command:
-        try:
-            # Use Popen to stream the command output in real-time
-            process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            
-            def generate():
-                # Yield lines from the command's output
-                for line in process.stdout:
-                    yield line
-                # Wait for the process to complete and yield any final errors
-                process.wait()
-                if process.returncode != 0:
-                    yield f"Error: {process.stderr.read()}"
-            
-            return Response(generate(), mimetype='text/plain')
-        except Exception as e:
-            return {"error": str(e)}, 500
+    if not command:
+        return jsonify({"error": "No command provided"}), 400
+
+    future = executor.submit(subprocess.run, command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    
+    result = future.result()  # Wait for command execution
+    
+    if result.returncode == 0:
+        return jsonify({"success": True, "output": result.stdout.strip()})
     else:
-        return "No command received", 400
+        return jsonify({"success": False, "error": result.stderr.strip()}), 400
     
 @app.route('/logout', methods=['POST'])
 @jwt_required()
