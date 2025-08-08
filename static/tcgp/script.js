@@ -187,7 +187,7 @@ async function saveJson() {
         let jsonlist = {}
         let unown = false
 
-        for (let i  = 0; i < 160; i++){
+        for (let i  = 0; i < 161; i++){
             let cardName = cardNames[i]
             let checkbox = document.querySelector(`input[data-card-name="${cardName}"]`);
             if (checkbox && checkbox.checked) {
