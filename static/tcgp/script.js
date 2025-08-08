@@ -252,7 +252,7 @@ function renderTable(saved = {}){
 window.onload = function() {
 loggedin = false
 saved = null
-if(loggedin){
+if(!loggedin){
     document.getElementById('loginModal').style.display = 'flex';
     document.getElementById('loginSubmit').onclick = async function() {
         const username = document.getElementById('modalUsername').value;
@@ -263,7 +263,7 @@ if(loggedin){
         }
     }
 }
-if (!loggedin) {
+if (loggedin) {
     document.getElementById('loginModal').style.display = 'none';
     tcgdex = new TCGdex('en'); 
     //saved = loadFile('http://markrainey.me/datastore/savedJson.txt');
@@ -312,3 +312,4 @@ if (!loggedin) {
         });
     }
  }
+
