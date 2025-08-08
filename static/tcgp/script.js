@@ -116,7 +116,7 @@ async function getSet(id) {
 }
 
 async function getSavedSet(e) {
-    const file = e.target.files[0];
+    const file = e
     if (!file) return null;
 
     return new Promise((resolve, reject) => {
@@ -266,7 +266,7 @@ if(!loggedin){
 if (loggedin) {
     document.getElementById('loginModal').style.display = 'none';
     tcgdex = new TCGdex('en'); 
-    //saved = loadFile('http://markrainey.me/datastore/savedJson.txt');
+    saved = loadFile('http://markrainey.me/datastore/savedJson.txt');
     getSet('Wisdom of Sea and Sky').then(cards => {
         if (cards) {
         for(let i = 0 ; i < cards.cards.length; i++){
@@ -312,7 +312,6 @@ if (loggedin) {
         });
     }
  }
-
 
 
 
