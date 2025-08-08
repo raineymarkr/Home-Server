@@ -150,7 +150,7 @@
                 }
 
                 const data = await response.json();
-                localStorage.setItem('token', data.token);
+                localStorage.setItem('token', data.access_token);
                 return true;
         } catch(error) {
             console.error('Error during login:', error);
