@@ -249,69 +249,62 @@ function renderTable(saved = {}){
     tableBody.appendChild(frag);
 }
 
-window.onload = function() {
-loggedin = false
-saved = null
-if(!loggedin){
-    document.getElementById('loginModal').style.display = 'flex';
-    document.getElementById('loginSubmit').onclick = async function() {
-        const username = document.getElementById('modalUsername').value;
-        const password = document.getElementById('modalPassword').value;
-        loggedin = await login(username, password);
-        if (loggedin) {
-            document.getElementById('loginModal').style.display = 'none';
-        }
-    }
+function wireButtons() {
+  document.getElementById('log-button').onclick = function() {
+    countCards();
+  };
 }
-if (loggedin) {
-    document.getElementById('loginModal').style.display = 'none';
-    tcgdex = new TCGdex('en'); 
-    saved = loadFile('http://markrainey.me/datastore/savedJson.txt');
-    getSet('Wisdom of Sea and Sky').then(cards => {
-        if (cards) {
-        for(let i = 0 ; i < cards.cards.length; i++){
-            if(cards.cards[i].localId < 202){
-            if (ho_oh_card_names.includes(cards.cards[i].name)){
-                cardDeck = 'Ho-Oh'
-            } else if (non_exclusive_card_names.includes(cards.cards[i].name)){
-                cardDeck = 'Either'
-            } else {
-                cardDeck = 'Lugia'
-            }
-            cardList[cards.cards[i].name] = cardDeck
-            cardNames.push(cards.cards[i].name)
-            }
-        }		
-        }
+async function initApp() {
+  tcgdex = new TCGdex('en');
 
+  // Load saved file (await!)
+  let saved = null;
+  try {
+    saved = await loadFile('http://markrainey.me/datastore/savedJson.txt'); // ensure path/case matches server
+  } catch (e) {
+    console.warn('No saved file or CORS blocked:', e);
+  }
 
-        renderTable(saved);
-        });
-
-        
-        document.getElementById('log-button').onclick = function() {
-            const checkedCards = [];
-            const checkboxes = document.getElementsByClassName('card-checkbox');
-            for (const checkbox of checkboxes) {
-                checkedCards.push({
-                    name: checkbox.dataset.cardName,
-                    deck: checkbox.dataset.cardDeck,
-                    acquired: checkbox.checked
-                });
-            }
-            countCards()
-        }
-
-        document.getElementById('file-input').addEventListener('change', async e => { 
-            try {
-                saved = await getSavedSet(e);
-                renderTable(saved);
-            } catch (err) {
-                console.error('Error reading file:', err);
-            }
-        });
+  // Fetch set and build lists
+  const set = await getSet('Wisdom of Sea and Sky'); // make sure this ID is correct for the SDK
+  if (set && Array.isArray(set.cards)) {
+    for (const c of set.cards) {
+      if (c.localId < 202) {
+        const name = c.name;
+        // normalize a few known capitalization issues
+        const normalized = name.replace('Ho-Oh EX', 'Ho-Oh ex').replace('Crobat EX', 'Crobat ex');
+        let deck = 'Lugia';
+        if (ho_oh_card_names.includes(normalized)) deck = 'Ho-Oh';
+        else if (non_exclusive_card_names.includes(normalized)) deck = 'Either';
+        cardList[name] = deck;
+        cardNames.push(name);
+      }
     }
- }
+  }
+
+  renderTable(saved || {});
+  wireButtons();
+}
+
+window.onload = function () {
+  let loggedin = false;
+
+  const show = () => document.getElementById('loginModal').style.display = 'flex';
+  const hide = () => document.getElementById('loginModal').style.display = 'none';
+
+  show();
+
+  document.getElementById('loginSubmit').onclick = async function () {
+    const username = document.getElementById('modalUsername').value;
+    const password = document.getElementById('modalPassword').value;
+    loggedin = await login(username, password);
+    if (loggedin) {
+      hide();
+      initApp(); // <-- initialize AFTER login
+    }
+  };
+};
+
 
 
 
