@@ -158,28 +158,44 @@
         }
     }
 
-    async function saveJson() {
-        try{
-            const token = localStorage.getItem('token');
-            const json = countCards();
-            const response = await fetch('http://markrainey.me/datastore',{
-                method: 'POST',
-                headers: {
-                    'Authorization': 'Bearer ' + token,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(json)
-                });
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(`Save failed: ${errorData.message}`);
-                }
-                return true;
-        } catch(error) {
-            console.error('Error during save:', error);
-            alert('Save failed. Please try again.');
-        }
+async function saveJson() {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Not logged in');
+
+    const payload = countCards();
+
+    const fileBlob = new Blob(
+      [JSON.stringify(payload, null, 2)], 
+      { type: 'application/json' }
+    );
+
+    const formData = new FormData();
+    formData.append('file', fileBlob, 'savedJson.txt');
+
+    const resp = await fetch('http://markrainey.me/datastore', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token
+      },
+      body: formData
+    });
+
+    if (!resp.ok) {
+      let msg = 'Unknown error';
+      try { msg = (await resp.json()).message; } catch {}
+      throw new Error(`Save failed: ${msg}`);
     }
+
+    console.log('File saved successfully');
+    return true;
+
+  } catch (err) {
+    console.error('Error during save:', err);
+    alert('Save failed. Please try again.');
+  }
+}
+
 
     function countCards(){
         let acquired_hooh = 0
@@ -279,7 +295,7 @@
     saveJson()};
     }
 
-    
+
     async function initApp() {
     tcgdex = new TCGdex('en');
 
