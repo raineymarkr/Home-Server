@@ -7,8 +7,14 @@ from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor
 import logging 
 from werkzeug.utils import secure_filename
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 app = Flask(__name__)
+
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+app.config.update(SESSION_COOKIE_SECURE=True, PREFERRED_URL_SCHEME='https')
+
+
 
 load_dotenv(dotenv_path=r'.env')
 
@@ -80,10 +86,21 @@ def home():
 def serve_static_or_directory(path):
     full_path = os.path.join(app.static_folder, path)
     if os.path.isdir(full_path):
-        files = os.listdir(full_path)
+        index_path = os.path.join(full_path, 'index.html')
+        if os.path.isfile(index_path):
+            # serve that directory's index.html
+            return send_from_directory(full_path, 'index.html')
+        # directory listing
+        files = sorted(os.listdir(full_path))
         return render_template_string(
-            "<h1> Directory Listing for {{ path }}</h1>"
-            "<ul>{% for file in files %}<li><a href='{{ path }}/{{ file }}'> {{ file }}</a></li>{% endfor %}</ul>",
+            """
+            <h1>Directory Listing for {{ path or '/' }}</h1>
+            <ul>
+            {% for file in files %}
+              <li><a href="{{ url_for('serve_static_or_directory', path=(path + '/' if path else '') + file) }}">{{ file }}</a></li>
+            {% endfor %}
+            </ul>
+            """,
             path=path, files=files
         )
     elif os.path.isfile(full_path):

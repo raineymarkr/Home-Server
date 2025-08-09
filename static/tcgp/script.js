@@ -137,7 +137,7 @@
 
     async function login(username, password) {
         try{
-            const response = await fetch('http://markrainey.me/login',{
+            const response = await fetch('https://markrainey.me/login',{
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -167,7 +167,7 @@ async function saveJson() {
   const fd = new FormData();
   fd.append('file', blob, 'savedJson.txt');
 
-  const resp = await fetch('http://markrainey.me/datastore', {
+  const resp = await fetch('https://markrainey.me/datastore', {
     method: 'POST',
     headers: { 'Authorization': 'Bearer ' + token },
     body: fd
@@ -286,7 +286,7 @@ async function saveJson() {
     // Load saved file (await!)
     let saved = null;
     try {
-        saved = await loadFile('http://markrainey.me/datastore/savedJson.txt'); // ensure path/case matches server
+        saved = await loadFile('https://markrainey.me/datastore/savedJson.txt'); // ensure path/case matches server
     } catch (e) {
         console.warn('No saved file or CORS blocked:', e);
     }
