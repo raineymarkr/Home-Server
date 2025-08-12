@@ -103,6 +103,10 @@
 
     let cardNames = []
 
+    let HoohTotal = 0
+    let LugiaTotal = 0
+    let BothTotal = 0
+
     let tcgdex = null
     let table
 
@@ -175,7 +179,7 @@ async function saveJson() {
 
   const text = await resp.text();
   if (!resp.ok) throw new Error(text || 'Save failed');
-  console.log('Saved:', text);
+  alert('✅ Save successful!\n' + text);
 }
 
 
@@ -208,7 +212,7 @@ async function saveJson() {
             }
             jsonlist[cardName] = checkbox.checked ? 1 : 0
         }
-        document.getElementById('log-output').textContent = `Ho-Oh Deck: ${acquired_hooh} cards, Lugia Deck: ${acquired_lugia} cards, Non-exclusive: ${acquired_nonexclusive} cards`
+        document.getElementById('log-output').textContent = `Ho-Oh Deck: ${acquired_hooh} / ${HoohTotal} cards, Lugia Deck: ${acquired_lugia} / ${LugiaTotal} cards, Non-exclusive: ${acquired_nonexclusive} / ${BothTotal} cards`
         console.log(`Ho-Oh Deck: ${acquired_hooh} cards, Lugia Deck: ${acquired_lugia} cards, Non-exclusive: ${acquired_nonexclusive} cards`)
         return jsonlist
     }
@@ -228,7 +232,7 @@ async function saveJson() {
         tableBody = document.getElementById('card-table');
         tableBody.style.display = 'table-row-group';
         tableBody.replaceChildren();
-        unown = false
+        let unown = false
 
         const frag = document.createDocumentFragment();
         for (let i = 0; i<= 160; i++){
@@ -295,13 +299,24 @@ async function saveJson() {
     const set = await getSet('Wisdom of Sea and Sky'); // make sure this ID is correct for the SDK
     if (set && Array.isArray(set.cards)) {
         for (const c of set.cards) {
-        if (c.localId < 202) {
+        if (c.localId <= 161) {
+            console.log(c.localId, c.name)
             const name = c.name;
             // normalize a few known capitalization issues
             const normalized = name.replace('Ho-Oh EX', 'Ho-Oh ex').replace('Crobat EX', 'Crobat ex');
-            let deck = 'Lugia';
-            if (ho_oh_card_names.includes(normalized)) deck = 'Ho-Oh';
-            else if (non_exclusive_card_names.includes(normalized)) deck = 'Either';
+            let deck;
+            if (ho_oh_card_names.includes(normalized)){ 
+                deck = 'Ho-Oh'
+                HoohTotal +=1
+            }
+            else if (non_exclusive_card_names.includes(normalized)) {
+                deck = 'Either'
+                BothTotal += 1
+            }
+            else {
+                deck = 'Lugia'
+                LugiaTotal +=1 
+            }
             cardList[name] = deck;
             cardNames.push(name);
         }
