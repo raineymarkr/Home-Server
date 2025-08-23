@@ -1,0 +1,15 @@
+# Ignore everything at repo root
+/*
+
+# Allow only these back in
+!/.gitignore
+!/server.py
+
+# Ignore common stuff anywhere
+**/__pycache__/
+**/*.pyc
+**/*.log
+**/*.sqlite3
+**/*.db
+*.env
+.DS_Store

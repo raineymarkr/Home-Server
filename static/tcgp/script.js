@@ -100,15 +100,17 @@
     ]
 
     let cardList = {}
+    let rarities = {}
 
     let cardNames = []
-
+    
     let HoohTotal = 0
     let LugiaTotal = 0
     let BothTotal = 0
 
     let tcgdex = null
     let table
+    let savedRarity = false;
 
     async function getSet(id) {
         try {
@@ -117,6 +119,15 @@
         } catch (e) {
             console.error(`Error fetching set ${id}`, e);
         }
+    }
+
+    async function getRarity(set, id) {
+        try{
+            const card = await tcgdex.fetch('sets',set, id);
+            rarities[card.name] = card.rarity
+        } catch(e){
+            console.error(`Error fetching rarity for ${id}`, e);
+        }         
     }
 
     async function getSavedSet(e) {
@@ -162,14 +173,12 @@
         }
     }
 
-async function saveJson() {
+async function saveJson(payload, name) {
   const token = localStorage.getItem('token');
-  console.log('Token:', token);
-  const payload = countCards();
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'text/plain' });
 
   const fd = new FormData();
-  fd.append('file', blob, 'savedJson.txt');
+  fd.append('file', blob, name);
 
   const resp = await fetch('https://markrainey.me/datastore', {
     method: 'POST',
@@ -181,7 +190,6 @@ async function saveJson() {
   if (!resp.ok) throw new Error(text || 'Save failed');
   alert('✅ Save successful!\n' + text);
 }
-
 
 
     function countCards(){
@@ -235,6 +243,30 @@ async function saveJson() {
         let unown = false
 
         const frag = document.createDocumentFragment();
+
+        let row = document.createElement('tr');
+
+        const blankTitle = document.createElement('td');
+        blankTitle.className = 'title'
+        blankTitle.textContent = '    '
+
+        const nameTitle = document.createElement('td');
+        nameTitle.className = 'title'
+        nameTitle.textContent = 'Pokemon'
+
+        const rarityTitle = document.createElement('td');
+        rarityTitle.className = 'title'
+        rarityTitle.textContent = 'Rarity   '
+
+        const packTitle = document.createElement('td');
+        packTitle.className = 'title'
+        packTitle.textContent = 'Pack'
+
+        row.appendChild(blankTitle);
+        row.appendChild(nameTitle);
+        row.appendChild(rarityTitle);
+        row.appendChild(packTitle)
+        frag.appendChild(row);
         for (let i = 0; i<= 160; i++){
             cardName = cardNames[i]
             const row = document.createElement('tr');
@@ -252,6 +284,10 @@ async function saveJson() {
             nameCell.className = 'card-name';
             nameCell.textContent = cardName;
 
+            const rarityCell = document.createElement('td');
+            rarityCell.className = 'card-rarity'
+            rarityCell.textContent = rarities[cardName]
+
             const deckCell = document.createElement('td');
             deckCell.className = 'card-deck';
             if(cardName != 'Unown'){
@@ -267,6 +303,7 @@ async function saveJson() {
 
             row.appendChild(checkboxCell);
             row.appendChild(nameCell);
+            row.appendChild(rarityCell);
             row.appendChild(deckCell);
 
             frag.appendChild(row);
@@ -280,7 +317,8 @@ async function saveJson() {
         countCards();
     };
     document.getElementById('save-button').onclick = async function() {
-    saveJson()};
+        const payload = countCards();
+    saveJson(payload, 'savedJson.txt')};
     }
 
 
@@ -297,29 +335,61 @@ async function saveJson() {
 
     // Fetch set and build lists
     const set = await getSet('Wisdom of Sea and Sky'); // make sure this ID is correct for the SDK
+
+    let loaded_rarity = null;
     if (set && Array.isArray(set.cards)) {
-        for (const c of set.cards) {
-        if (c.localId <= 161) {
-            console.log(c.localId, c.name)
-            const name = c.name;
-            // normalize a few known capitalization issues
-            const normalized = name.replace('Ho-Oh EX', 'Ho-Oh ex').replace('Crobat EX', 'Crobat ex');
-            let deck;
-            if (ho_oh_card_names.includes(normalized)){ 
-                deck = 'Ho-Oh'
-                HoohTotal +=1
-            }
-            else if (non_exclusive_card_names.includes(normalized)) {
-                deck = 'Either'
-                BothTotal += 1
-            }
-            else {
-                deck = 'Lugia'
-                LugiaTotal +=1 
-            }
-            cardList[name] = deck;
-            cardNames.push(name);
+        try{
+            loaded_rarity = await loadFile('https://markrainey.me/datastore/savedRarities.txt');
+        } catch(e){
+            console.warn('No saved file or CORs blocked:', e)
         }
+
+        for (const c of set.cards) {
+            if (c.localId <= 161) {
+
+                const name = c.name;
+
+                if(loaded_rarity == null){
+                    const rarity = await getRarity('Wisdom of Sea and Sky', c.localId);
+                    if (rarities[name] == "One Diamond"){
+                        rarities[name] = "◇"
+                    } else if (rarities[name] == "Two Diamond"){
+                        rarities[name] = "◇◇"
+                    } else if (rarities[name] == "Three Diamond"){
+                        rarities[name] = "◇◇◇"
+                    } else if (rarities[name] == "Four Diamond"){
+                        rarities[name] = "◇◇◇◇"
+                    } else {
+                        rarities[name] = ""
+                    }
+                } else {
+                    rarities = loaded_rarity;
+                }
+                
+                
+                // normalize a few known capitalization issues
+                const normalized = name.replace('Ho-Oh EX', 'Ho-Oh ex').replace('Crobat EX', 'Crobat ex');
+                let deck;
+                if (ho_oh_card_names.includes(normalized)){ 
+                    deck = 'Ho-Oh'
+                    HoohTotal +=1
+                }
+                else if (non_exclusive_card_names.includes(normalized)) {
+                    deck = 'Either'
+                    BothTotal += 1
+                }
+                else {
+                    deck = 'Lugia'
+                    LugiaTotal +=1 
+                }
+
+                
+
+                cardList[name] = deck;
+                cardNames.push(name);
+            } else {if (savedRarity == false) {
+                saveJson(rarities, 'savedRarities.txt')
+                savedRarity = true;} }
         }
     }
 
@@ -328,20 +398,32 @@ async function saveJson() {
     }
 
     window.onload = function () {
-    let loggedin = false;
+        let loggedin = false;
 
-    const show = () => document.getElementById('loginModal').style.display = 'flex';
-    const hide = () => document.getElementById('loginModal').style.display = 'none';
+        const show = () => document.getElementById('loginModal').style.display = 'flex';
+        const hide = () => document.getElementById('loginModal').style.display = 'none';
 
-    show();
+        show();
 
-    document.getElementById('loginSubmit').onclick = async function () {
-        const username = document.getElementById('modalUsername').value;
-        const password = document.getElementById('modalPassword').value;
-        loggedin = await login(username, password);
-        if (loggedin) {
-        hide();
-        initApp(); 
-        }
-    };
+        document.addEventListener('keydown', async function(event) {
+            if(event.key === 'Enter'){
+                const username = document.getElementById('modalUsername').value.toLowerCase();
+                const password = document.getElementById('modalPassword').value.toLowerCase();
+                loggedin = await login(username, password);
+                if (loggedin) {
+                hide();
+                initApp(); 
+                }
+            }
+        });
+
+        document.getElementById('loginSubmit').onclick = async function () {
+            const username = document.getElementById('modalUsername').value.toLowerCase();
+            const password = document.getElementById('modalPassword').value.toLowerCase();
+            loggedin = await login(username, password);
+            if (loggedin) {
+                hide();
+                initApp(); 
+            }
+        };
     };
