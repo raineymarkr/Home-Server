@@ -8,9 +8,10 @@ from concurrent.futures import ThreadPoolExecutor
 import logging 
 from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
+from document_api import bp as documents_bp
 
 app = Flask(__name__)
-
+app.register_blueprint(documents_bp)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 app.config.update(SESSION_COOKIE_SECURE=True, PREFERRED_URL_SCHEME='https')
 
