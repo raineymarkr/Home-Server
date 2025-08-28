@@ -52,13 +52,26 @@
     }
 
     .btn-secondary {
-      background-color: #ccc;
+      background-color: #ff2222;
     }
 
     .title {
       font-weight: bold;
       font-size: large;
     }
+
+    .card-table {
+      text-align: center;
+      margin: auto;
+      align-items: center;
+    }
+
+    table, th, td {
+    padding: 10px;
+    border: 1px solid;
+  }
+
+  tr:nth-child(even) {background-color: #f2f2f2;}
   </style>
 
   </head>
@@ -74,15 +87,22 @@
         <br>
         <button class="btn-primary" id="loginSubmit">Log In</button>
       </div>
-    </div>
-
-        
+    </div>        
         <div id="card-table"></div>
-        <button id="log-button">Log Checked Cards</button>
+        <button id="log-button" class="btn-primary">Log Checked Cards</button>
+        <button id="save-button" class="btn-secondary">Save Set</button>
         <br>
-        <div id="log-output"></div>
+        <div id="log-output" ></div>
         <br>
-        <button id="save-button">Save Set</button>
+        <div id="saveModal">
+      <div class="modal-content">
+        <h3> Do You Want to Save?</h3>
+        <br>
+        <button class="btn-primary" id="saveSubmit"> Save </button>
+        <button class="btn-secondary" id="saveClose"> Close </button>
+      </div>
+    </div>
+        
     </main>
     <script src="/tcgp/script.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tcgdex/sdk@2/dist/tcgdex.browser.js"></script>

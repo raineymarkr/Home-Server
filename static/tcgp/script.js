@@ -188,7 +188,7 @@ async function saveJson(payload, name) {
 
   const text = await resp.text();
   if (!resp.ok) throw new Error(text || 'Save failed');
-  alert('✅ Save successful!\n' + text);
+  if (name == 'savedJson.txt') alert('✅ Save successful!\n' + text);
 }
 
 
@@ -221,7 +221,6 @@ async function saveJson(payload, name) {
             jsonlist[cardName] = checkbox.checked ? 1 : 0
         }
         document.getElementById('log-output').textContent = `Ho-Oh Deck: ${acquired_hooh} / ${HoohTotal} cards, Lugia Deck: ${acquired_lugia} / ${LugiaTotal} cards, Non-exclusive: ${acquired_nonexclusive} / ${BothTotal} cards`
-        console.log(`Ho-Oh Deck: ${acquired_hooh} cards, Lugia Deck: ${acquired_lugia} cards, Non-exclusive: ${acquired_nonexclusive} cards`)
         return jsonlist
     }
 
@@ -313,12 +312,27 @@ async function saveJson(payload, name) {
     }
 
     function wireButtons() {
+        const showSave = () => {
+            document.getElementById('saveModal').style.display = 'flex';
+            document.getElementById('card-table').style.display = 'none';
+        };
+        const hideSave = () => {
+            document.getElementById('saveModal').style.display = 'none';
+            document.getElementById('card-table').style.display = 'table-row-group';
+        };
     document.getElementById('log-button').onclick = function() {
         countCards();
     };
     document.getElementById('save-button').onclick = async function() {
         const payload = countCards();
-    saveJson(payload, 'savedJson.txt')};
+        showSave();
+        document.getElementById('saveSubmit').onclick = async function () {
+            saveJson(payload, 'savedJson.txt');
+            hideSave();}
+        }
+        document.getElementById('saveClose').onclick = async function () {
+            hideSave();
+        }
     }
 
 
@@ -400,9 +414,19 @@ async function saveJson(payload, name) {
     window.onload = function () {
         let loggedin = false;
 
-        const show = () => document.getElementById('loginModal').style.display = 'flex';
-        const hide = () => document.getElementById('loginModal').style.display = 'none';
+        const show = () => {
+            document.getElementById('loginModal').style.display = 'flex';
+            document.getElementById('log-button').style.display = 'none';
+            document.getElementById('save-button').style.display = 'none';
+        }
+        const hide = () =>{ 
+            document.getElementById('loginModal').style.display = 'none';
+            document.getElementById('log-button').style.display = 'flex';
+            document.getElementById('save-button').style.display = 'flex';
+        }
+        const hideSave = () => document.getElementById('saveModal').style.display = 'none';
 
+        hideSave();
         show();
 
         document.addEventListener('keydown', async function(event) {
