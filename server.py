@@ -1,5 +1,6 @@
 from flask import Flask, request, Response,jsonify, send_from_directory, render_template_string, flash, redirect, url_for
 import os
+import sys
 import subprocess
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
 from datetime import timedelta   
@@ -9,6 +10,10 @@ import logging
 from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
 from document_api import bp as documents_bp
+
+sys.path.append(os.path.join(os.path.dirname(__file__), "EasyStreet_WebApp"))
+
+from app.document_api import bp as documents_bp
 
 app = Flask(__name__)
 app.register_blueprint(documents_bp)
